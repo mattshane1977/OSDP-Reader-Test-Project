@@ -29,7 +29,7 @@ The reader was transformed from a non-buildable skeleton into a production-ready
 
 ### Project Hosting
 *   **GitHub Repository**: [https://github.com/mattshane1977/OSDP-Reader-Test-Project](https://github.com/mattshane1977/OSDP-Reader-Test-Project)
-*   **Latest Release**: [v1.3](https://github.com/mattshane1977/OSDP-Reader-Test-Project/releases/tag/v1.3) (Non-Fatal NFC Init)
+*   **Latest Release**: [v1.4](https://github.com/mattshane1977/OSDP-Reader-Test-Project/releases/tag/v1.4) (Hardware Schematic Included)
 
 ### Known Configuration
 *   **Default OSDP Address**: 0x65
