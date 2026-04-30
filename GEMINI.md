@@ -29,7 +29,7 @@ The reader was transformed from a non-buildable skeleton into a production-ready
 
 ### Project Hosting
 *   **GitHub Repository**: [https://github.com/mattshane1977/OSDP-Reader-Test-Project](https://github.com/mattshane1977/OSDP-Reader-Test-Project)
-*   **Latest Release**: [v1.1](https://github.com/mattshane1977/OSDP-Reader-Test-Project/releases/tag/v1.1) (Fixed Partition Table Boot-Loop)
+*   **Latest Release**: [v1.2](https://github.com/mattshane1977/OSDP-Reader-Test-Project/releases/tag/v1.2) (Confirmed Partition Table Fix)
 
 ### Known Configuration
 *   **Default OSDP Address**: 0x65
