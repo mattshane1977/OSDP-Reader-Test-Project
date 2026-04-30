@@ -29,9 +29,10 @@ The reader was transformed from a non-buildable skeleton into a production-ready
 
 ### Project Hosting
 *   **GitHub Repository**: [https://github.com/mattshane1977/OSDP-Reader-Test-Project](https://github.com/mattshane1977/OSDP-Reader-Test-Project)
-*   **Latest Release**: [v1.4](https://github.com/mattshane1977/OSDP-Reader-Test-Project/releases/tag/v1.4) (Hardware Schematic Included)
+*   **Latest Release**: [v1.5](https://github.com/mattshane1977/OSDP-Reader-Test-Project/releases/tag/v1.5) (PN5180 Driver Enabled)
 
 ### Known Configuration
+*   **NFC Driver**: PN5180 (v1.5+)
 *   **Default OSDP Address**: 0x65
 *   **mDNS Hostname**: `leaf-reader`
 *   **AP Provisioning SSID**: `leaf-reader-XXXXXX` (last 3 bytes of MAC)
