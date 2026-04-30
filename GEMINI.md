@@ -27,6 +27,10 @@ The reader was transformed from a non-buildable skeleton into a production-ready
 *   **Networking**: WiFi management logic (saving creds, status) is strictly contained in the `netconfig` component. UI and Console layers must use the `netconfig.h` API.
 *   **Security**: Always prioritize `nvs_flash_secure_init()` for sensitive data.
 
+### Project Hosting
+*   **GitHub Repository**: [https://github.com/mattshane1977/OSDP-Reader-Test-Project](https://github.com/mattshane1977/OSDP-Reader-Test-Project)
+*   **Latest Release**: [v1.0](https://github.com/mattshane1977/OSDP-Reader-Test-Project/releases/tag/v1.0) (Initial Production-Ready Release)
+
 ### Known Configuration
 *   **Default OSDP Address**: 0x65
 *   **mDNS Hostname**: `leaf-reader`
