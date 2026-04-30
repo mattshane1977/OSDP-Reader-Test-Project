@@ -1,0 +1,23 @@
+idf_component_register(
+    SRCS
+        "app_main.c"
+        "osdp_pd.c"
+        "nfc_task.c"
+    INCLUDE_DIRS "."
+    REQUIRES
+        nvs_flash
+        driver
+        esp_timer
+        log
+        board
+        nfc_hal
+        pn532
+        pn5180
+        desfire
+        leaf
+        reader_core
+        app_console
+        netconfig
+        webui
+        libosdp
+)

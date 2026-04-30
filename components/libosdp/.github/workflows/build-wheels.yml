@@ -1,0 +1,142 @@
+#
+# Copyright (c) 2020-2025 Siddharth Chandrasekaran <sidcha.dev@gmail.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+name: Publish PyPI
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Create Release"]
+    types: [completed]
+
+jobs:
+  build_wheels:
+    name: "Build wheels on ${{ matrix.os }} (${{ matrix.image }}; Archs: ${{ matrix.archs }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux manylinux
+          - os: ubuntu-22.04
+            platform: linux
+            image: manylinux
+            archs: x86_64
+          - os: ubuntu-22.04
+            platform: linux
+            image: manylinux
+            archs: aarch64
+
+          # Linux musllinux
+          - os: ubuntu-22.04
+            platform: linux
+            image: musllinux
+            archs: x86_64
+          - os: ubuntu-22.04
+            platform: linux
+            image: musllinux
+            archs: aarch64
+
+          # macOS (multi-arch)
+          - os: macos-13
+            platform: macos
+            image: macosx
+            archs: "x86_64 arm64 universal2"
+
+          # Windows (multi-arch)
+          - os: windows-2022
+            platform: windows
+            image: win
+            archs: "AMD64 ARM64"
+
+    env:
+      CIBW_OUTPUT_DIR: wheelhouse
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up QEMU (Linux cross-arch userspace for aarch64)
+        if: matrix.platform == 'linux'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        if: matrix.platform == 'linux'
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up Python (for macOS/Windows runners cibuildwheel uses local Pythons)
+        if: matrix.platform != 'linux'
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Build wheels with cibuildwheel
+        uses: pypa/cibuildwheel@v3.0.0
+        with:
+          output-dir: ${{ env.CIBW_OUTPUT_DIR }}
+          package-dir: python/
+        env:
+          CIBW_ARCHS_LINUX: ${{ matrix.archs }}
+          CIBW_ARCHS_MACOS: ${{ matrix.archs }}
+          CIBW_ARCHS_WINDOWS: ${{ matrix.archs }}
+          # Only build for the selected image type
+          CIBW_BUILD: "*-${{ matrix.image }}_*"
+
+      - name: List produced wheels
+        shell: bash
+        run: |
+          echo "Wheel files produced:"
+          ls -la ${{ env.CIBW_OUTPUT_DIR }} || true
+
+      - name: Upload wheelhouse artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheelhouse-${{ matrix.os }}-${{ matrix.image }}-${{ matrix.archs }}
+          path: ${{ env.CIBW_OUTPUT_DIR }}
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build sdist
+        run: |
+          python -m pip install --upgrade pip setuptools wheel build
+          pushd python
+          python -m build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-sdist
+          path: python/dist/*.tar.gz
+
+  upload_pypi:
+    name: Upload to PyPI
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-*
+          path: python/dist
+          merge-multiple: true
+
+      - name: Publish package distributions to PyPI
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: python/dist/

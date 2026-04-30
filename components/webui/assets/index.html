@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>LEAF reader</title>
+<style>
+:root {
+  --bg: #0f1115;
+  --surface: #181b22;
+  --surface-2: #21252e;
+  --border: #2a2f3a;
+  --text: #e6e8ec;
+  --muted: #8a93a6;
+  --green: #4ade80;
+  --red: #f87171;
+  --amber: #fbbf24;
+  --accent: #60a5fa;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.4;
+}
+header {
+  padding: 12px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+header h1 { margin: 0; font-size: 16px; font-weight: 500; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot.up { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.dot.down { background: var(--red); }
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+}
+@media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+}
+.panel h2 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.mode-row { display: flex; gap: 6px; margin-bottom: 16px; }
+.mode-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+.mode-btn:hover { border-color: var(--accent); }
+.mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.mode-btn.write.active { background: var(--amber); color: #000; border-color: var(--amber); }
+
+.field { margin-bottom: 10px; }
+.field label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.field input {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.field input:focus { outline: none; border-color: var(--accent); }
+
+button.primary {
+  width: 100%;
+  padding: 10px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+button.primary:hover { filter: brightness(1.1); }
+button.primary.danger { background: var(--red); }
+
+#log {
+  height: 60vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.row {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--surface-2);
+  display: grid;
+  grid-template-columns: 70px 90px 1fr;
+  gap: 12px;
+}
+.row:last-child { border-bottom: none; }
+.t { color: var(--muted); }
+.k { font-weight: 600; }
+.k.ok { color: var(--green); }
+.k.err { color: var(--red); }
+.k.info { color: var(--accent); }
+
+.kv { display: flex; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.kv b { color: var(--text); font-weight: 500; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>osdp-leaf-reader</h1>
+  <span><span id="dot" class="dot down"></span> <span id="conn">disconnected</span></span>
+  <span style="margin-left:16px"><span id="osdp-dot" class="dot down"></span> <span id="osdp-status">osdp: offline</span></span>
+  <span style="margin-left:auto" class="kv"><span>mode</span> <b id="mode-display">—</b></span>
+</header>
+
+<main>
+  <div>
+    <div class="panel">
+      <h2>Mode</h2>
+      <div class="mode-row">
+        <button class="mode-btn" data-mode="idle">Idle</button>
+        <button class="mode-btn" data-mode="read">Read</button>
+        <button class="mode-btn write" data-mode="write">Write</button>
+      </div>
+
+      <h2>Enroll next tap</h2>
+      <div class="field">
+        <label>Facility code</label>
+        <input id="enr-fac" type="number" value="1" min="0" max="65535"/>
+      </div>
+      <div class="field">
+        <label>Card ID</label>
+        <input id="enr-id" type="number" value="1001" min="0"/>
+      </div>
+      <div class="field">
+        <label>Issue date (optional)</label>
+        <input id="enr-date" type="number" value="0" min="0"/>
+      </div>
+      <button class="primary" id="btn-enroll">Queue enrollment</button>
+      <div class="hint">Tap a factory-default DESFire EV3 card after queuing.</div>
+
+      <hr/>
+
+      <h2>Site key</h2>
+      <div class="field">
+        <label>New key (32 hex chars)</label>
+        <input id="key-input" type="text" placeholder="00112233445566778899aabbccddeeff" maxlength="32"/>
+      </div>
+      <button class="primary" id="btn-key">Set site key</button>
+      <div class="hint">Affects key diversification — re-personalize cards after change.</div>
+
+      <hr/>
+
+      <h2>OSDP</h2>
+      <div class="field">
+        <label>Address (0-126)</label>
+        <input id="osdp-addr" type="number" value="101" min="0" max="126"/>
+      </div>
+      <div class="field">
+        <label>Baud rate</label>
+        <select id="osdp-baud">
+          <option value="9600">9600</option>
+          <option value="19200">19200</option>
+          <option value="38400">38400</option>
+          <option value="115200">115200</option>
+        </select>
+      </div>
+      <button class="primary" id="btn-osdp">Set OSDP config</button>
+
+      <hr/>
+      <button class="primary danger" id="btn-reboot">Reboot</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Event stream</h2>
+    <div id="log"></div>
+  </div>
+</main>
+
+<script>
+"use strict";
+
+const $ = sel => document.querySelector(sel);
+const log = $("#log");
+
+let ws = null;
+let currentMode = "idle";
+
+function setConn(ok) {
+  $("#dot").className = "dot " + (ok ? "up" : "down");
+  $("#conn").textContent = ok ? "connected" : "disconnected";
+}
+
+function setMode(m) {
+  currentMode = m;
+  $("#mode-display").textContent = m;
+  document.querySelectorAll(".mode-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.mode === m);
+  });
+}
+
+function tsNow() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function addRow(kindClass, kind, detail) {
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = `<span class="t">${tsNow()}</span>` +
+                  `<span class="k ${kindClass}">${kind}</span>` +
+                  `<span>${detail}</span>`;
+  log.insertBefore(row, log.firstChild);
+  // Cap at 100 rows
+  while (log.children.length > 100) log.removeChild(log.lastChild);
+}
+
+function handleEvent(ev) {
+  switch (ev.type) {
+    case "status":
+      setMode(ev.mode);
+      $("#osdp-dot").className = "dot " + (ev.osdp === "online" ? "up" : "down");
+      $("#osdp-status").textContent = "osdp: " + ev.osdp;
+      addRow("info", "status", `driver=${ev.driver} ip=${ev.ip || "?"} osdp=${ev.osdp}`);
+      break;
+    case "mode":
+      setMode(ev.value);
+      addRow("info", "mode", ev.value);
+      break;
+    case "card_read":
+      addRow("ok", "READ", `uid=${ev.uid} fac=${ev.facility} id=${ev.id}`);
+      break;
+    case "read_fail":
+      addRow("err", "FAIL", `uid=${ev.uid || "?"} — auth or MAC error`);
+      break;
+    case "write_ok":
+      addRow("ok", "WROTE", `uid=${ev.uid} fac=${ev.facility} id=${ev.id}`);
+      break;
+    case "write_fail":
+      addRow("err", "FAIL", `uid=${ev.uid || "?"} — personalization failed`);
+      break;
+    case "ack":
+      addRow("info", "ack", ev.cmd + (ev.detail ? " — " + ev.detail : ""));
+      break;
+    case "error":
+      addRow("err", "err", ev.message || JSON.stringify(ev));
+      break;
+    default:
+      addRow("info", ev.type || "?", JSON.stringify(ev));
+  }
+}
+
+function connect() {
+  const proto = location.protocol === "https:" ? "wss:" : "ws:";
+  ws = new WebSocket(proto + "//" + location.host + "/ws");
+  ws.onopen = () => { setConn(true); };
+  ws.onclose = () => {
+    setConn(false);
+    setTimeout(connect, 1500);  // auto-reconnect
+  };
+  ws.onerror = () => { /* close handler runs next */ };
+  ws.onmessage = e => {
+    try {
+      handleEvent(JSON.parse(e.data));
+    } catch (err) {
+      addRow("err", "parse", String(e.data).slice(0, 80));
+    }
+  };
+}
+
+function send(obj) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    addRow("err", "send", "not connected");
+    return;
+  }
+  ws.send(JSON.stringify(obj));
+}
+
+document.querySelectorAll(".mode-btn").forEach(b => {
+  b.addEventListener("click", () => send({ cmd: "mode", value: b.dataset.mode }));
+});
+
+$("#btn-enroll").addEventListener("click", () => {
+  send({
+    cmd: "enroll",
+    facility: parseInt($("#enr-fac").value || "0", 10),
+    id:       parseInt($("#enr-id").value  || "0", 10),
+    date:     parseInt($("#enr-date").value|| "0", 10),
+  });
+});
+
+$("#btn-key").addEventListener("click", () => {
+  const k = $("#key-input").value.trim();
+  if (!/^[0-9a-fA-F]{32}$/.test(k)) {
+    addRow("err", "key", "must be exactly 32 hex chars");
+    return;
+  }
+  if (!confirm("Replace site key? Existing cards will become unreadable.")) return;
+  send({ cmd: "key_set", key: k });
+  $("#key-input").value = "";
+});
+
+$("#btn-osdp").addEventListener("click", () => {
+  const addr = parseInt($("#osdp-addr").value);
+  const baud = parseInt($("#osdp-baud").value);
+  send({ cmd: "osdp_set", address: addr, baud: baud });
+});
+
+$("#btn-reboot").addEventListener("click", () => {
+  if (!confirm("Reboot the reader?")) return;
+  send({ cmd: "reboot" });
+});
+
+connect();
+</script>
+</body>
+</html>

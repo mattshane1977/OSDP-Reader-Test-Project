@@ -1,0 +1,19 @@
+menu "OSDP LEAF reader"
+
+choice NFC_DRIVER
+    prompt "NFC front-end driver"
+    default NFC_DRIVER_PN532
+    help
+        Selects which RFID chip's driver gets compiled in. The DESFire and
+        LEAF layers don't care which one is used — they call through the
+        nfc_hal interface.
+
+config NFC_DRIVER_PN532
+    bool "PN532 (SPI) — original bring-up hardware"
+
+config NFC_DRIVER_PN5180
+    bool "PN5180 (SPI) — preferred for DESFire EV3"
+
+endchoice
+
+endmenu

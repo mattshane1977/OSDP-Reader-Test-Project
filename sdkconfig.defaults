@@ -1,0 +1,22 @@
+# Target chip
+CONFIG_IDF_TARGET="esp32"
+
+# Dual-core scheduling — OSDP on core 0, NFC on core 1
+CONFIG_FREERTOS_UNICORE=n
+
+# mbedTLS — enable hardware AES + CMAC (used by both DESFire and OSDP-SC)
+CONFIG_MBEDTLS_HARDWARE_AES=y
+CONFIG_MBEDTLS_CMAC_C=y
+
+# NVS encryption — site keys live here, not in firmware blob
+CONFIG_NVS_ENCRYPTION=y
+
+# Stack + log
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=6144
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# Watchdog generous enough for crypto-heavy paths
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=10
+
+# NFC driver — PN532 for now; switch to PN5180 once boards are wired
+CONFIG_NFC_DRIVER_PN532=y
