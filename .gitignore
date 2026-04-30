@@ -5,6 +5,9 @@ sdkconfig.old
 managed_components/
 dependencies.lock
 
+# Generated during build by libosdp component CMakeLists
+components/libosdp/src/osdp_config.h
+
 # Editor files
 .vscode/
 .idea/
