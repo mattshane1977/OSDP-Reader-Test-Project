@@ -1,6 +1,7 @@
 # System Schematic - OSDP LEAF Reader
 
-This document details the hardware architecture and pinout for the OSDP LEAF Reader.
+**Release Version**: v1.4  
+**Last Updated**: April 30, 2026
 
 ## System Architecture
 
