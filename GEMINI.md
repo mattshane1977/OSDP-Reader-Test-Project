@@ -29,7 +29,7 @@ The reader was transformed from a non-buildable skeleton into a production-ready
 
 ### Project Hosting
 *   **GitHub Repository**: [https://github.com/mattshane1977/OSDP-Reader-Test-Project](https://github.com/mattshane1977/OSDP-Reader-Test-Project)
-*   **Latest Release**: [v1.5](https://github.com/mattshane1977/OSDP-Reader-Test-Project/releases/tag/v1.5) (PN5180 Driver Enabled)
+*   **Latest Release**: [v1.6](https://github.com/mattshane1977/OSDP-Reader-Test-Project/releases/tag/v1.6) (Plaintext PN5180 Build)
 
 ### Known Configuration
 *   **NFC Driver**: PN5180 (v1.5+)
