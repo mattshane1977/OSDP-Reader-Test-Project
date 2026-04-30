@@ -14,7 +14,16 @@ static const char *TAG = "nfc";
 
 static void nfc_task(void *arg)
 {
-    ESP_ERROR_CHECK(nfc_init());
+    esp_err_t err = nfc_init();
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "NFC init failed (0x%x). Hardware likely disconnected. NFC task suspended.", err);
+        for (;;) {
+            /* Service the local mode button even if NFC is dead */
+            button_event_t btn = board_button_poll();
+            if (btn != BTN_NONE) mode_handle_button(btn);
+            vTaskDelay(pdMS_TO_TICKS(500));
+        }
+    }
     desfire_init();
 
     /* Card present-edge detection: we want exactly one read/write per
