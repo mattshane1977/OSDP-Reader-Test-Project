@@ -5,6 +5,8 @@ credentials on MIFARE DESFire EV3 cards.
 
 ## Hardware
 
+See [SCHEMATIC.md](SCHEMATIC.md) for the full system diagram and pinout.
+
 | Function     | Component                | Notes |
 |--------------|--------------------------|-------|
 | MCU          | ESP-WROOM-32             | Dual core; OSDP on core 0, NFC on core 1 |
