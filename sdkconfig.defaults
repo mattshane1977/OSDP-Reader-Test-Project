@@ -1,5 +1,5 @@
 # Target chip
-CONFIG_IDF_TARGET="esp32"
+CONFIG_IDF_TARGET="esp32s3"
 
 # Dual-core scheduling — OSDP on core 0, NFC on core 1
 CONFIG_FREERTOS_UNICORE=n

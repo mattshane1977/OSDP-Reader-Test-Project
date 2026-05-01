@@ -1,84 +1,75 @@
 #pragma once
 
 /*
- * Pin map — ESP-WROOM-32
+ * Pin map — ESP32-S3-WROOM-1 (N16R8, 44-pin dev board)
  *
- *  PN532 (SPI mode, DIP1=OFF DIP2=ON):
- *      VCC  -> 3V3
+ *  Avoid: GPIO19/20 (USB D-/D+), GPIO26-32 (internal octal flash),
+ *         GPIO33-37 (PSRAM), GPIO43/44 (UART0 via USB-UART chip),
+ *         GPIO0 (BOOT button / strapping — usable as input after boot),
+ *         GPIO3/45/46 (strapping)
+ *
+ *  PN5180 (SPI, primary NFC):
+ *      VCC  -> 5V (TX driver), logic 3.3V
  *      GND  -> GND
- *      SCK  -> GPIO 18  (VSPI CLK)
- *      MISO -> GPIO 19  (VSPI MISO)
- *      MOSI -> GPIO 23  (VSPI MOSI)
- *      SS   -> GPIO  5  (CS, active low)
- *      IRQ  -> GPIO  4  (optional, used for InListPassive polling wake)
- *      RST  -> GPIO  2
+ *      SCK  -> GPIO 12  (SPI2 CLK)
+ *      MISO -> GPIO 13  (SPI2 MISO)
+ *      MOSI -> GPIO 11  (SPI2 MOSI)
+ *      NSS  -> GPIO 10  (CS, active low)
+ *      BUSY -> GPIO 14  (must be LOW before each command)
+ *      RST  -> GPIO 15
+ *      IRQ  -> GPIO 16
+ *
+ *  PN532 (SPI, alternative NFC, DIP1=OFF DIP2=ON):
+ *      SCK  -> GPIO 12, MISO -> GPIO 13, MOSI -> GPIO 11
+ *      SS   -> GPIO 10, IRQ  -> GPIO 16, RST  -> GPIO  8
  *
  *  HiLetgo TTL<->RS485 (auto flow):
- *      VCC  -> 5V (board has 3V3 logic level shifter; data lines are 3V3 safe)
- *      GND  -> GND
- *      RXD  -> GPIO 17  (UART2 TX from ESP)
- *      TXD  -> GPIO 16  (UART2 RX into ESP)
+ *      RXD  -> GPIO 17  (UART1 TX from ESP)
+ *      TXD  -> GPIO 18  (UART1 RX into ESP)
  *      A/B  -> OSDP bus
  *
  *  Indicators / IO:
- *      Green LED (active high) -> GPIO 25, series resistor to GND
- *      Red   LED (active high) -> GPIO 26
- *      Active piezo (HIGH=on)  -> GPIO 27
- *      Mode button (to GND)    -> GPIO 32, internal pull-up
+ *      On-board WS2812B RGB LED   -> GPIO 48 (no external hardware needed)
+ *      Active piezo (HIGH=on)     -> GPIO 21
+ *      Mode button (BOOT button)  -> GPIO  0, active-low, internal pull-up
  *
- *  Reserved: GPIOs 6-11 (flash), 0/12/15 (strapping — avoid for outputs at boot)
+ *  Debug console: UART0 via on-board USB-UART chip (GPIO43/44) — unchanged
+ *
+ *  Decoupling: put 10µF + 100nF at PN5180 TVDD pin to prevent RF dropouts
+ *  during DESFire writes.
  */
 
 /* PN532 SPI */
-#define BOARD_PN532_SPI_HOST    VSPI_HOST
-#define BOARD_PN532_PIN_SCK     18
-#define BOARD_PN532_PIN_MISO    19
-#define BOARD_PN532_PIN_MOSI    23
-#define BOARD_PN532_PIN_CS       5
-#define BOARD_PN532_PIN_IRQ      4
-#define BOARD_PN532_PIN_RST      2
-#define BOARD_PN532_SPI_HZ      (5 * 1000 * 1000)   /* PN532 max ~5 MHz in SPI */
+#define BOARD_PN532_SPI_HOST    SPI2_HOST
+#define BOARD_PN532_PIN_SCK     12
+#define BOARD_PN532_PIN_MISO    13
+#define BOARD_PN532_PIN_MOSI    11
+#define BOARD_PN532_PIN_CS      10
+#define BOARD_PN532_PIN_IRQ     16
+#define BOARD_PN532_PIN_RST      8
+#define BOARD_PN532_SPI_HZ      (5 * 1000 * 1000)
 
-/*
- * PN5180 SPI — used when CONFIG_NFC_DRIVER_PN5180 is selected.
- *
- *   VCC      -> 5V (TX driver wants 5V; logic is 3.3V — most boards include
- *                   a level shifter, but verify with your specific module)
- *   GND      -> GND
- *   SCK      -> GPIO 18 (shared with PN532 mapping)
- *   MISO     -> GPIO 19
- *   MOSI     -> GPIO 23
- *   NSS      -> GPIO  5
- *   BUSY     -> GPIO 21  (NEW — must be polled before each command)
- *   RST      -> GPIO 22  (moved from GPIO 2 — needed for clean RF recovery)
- *   IRQ      -> GPIO  4  (status register drives this; we may use it as a
- *                         wake source for find_target later)
- *
- * Decoupling reminder: the PN5180 TX driver pulls ~100mA peaks. Put 10µF +
- * 100nF right at the chip's TVDD pin or you will see RF dropouts during
- * DESFire writes — a classic "card removed mid-personalize" ghost bug.
- */
-#define BOARD_PN5180_SPI_HOST    VSPI_HOST
-#define BOARD_PN5180_PIN_SCK     18
-#define BOARD_PN5180_PIN_MISO    19
-#define BOARD_PN5180_PIN_MOSI    23
-#define BOARD_PN5180_PIN_NSS      5
-#define BOARD_PN5180_PIN_BUSY    21
-#define BOARD_PN5180_PIN_RST     22
-#define BOARD_PN5180_PIN_IRQ      4
-#define BOARD_PN5180_SPI_HZ     (7 * 1000 * 1000)   /* PN5180 max 7 MHz */
+/* PN5180 SPI */
+#define BOARD_PN5180_SPI_HOST    SPI2_HOST
+#define BOARD_PN5180_PIN_SCK     12
+#define BOARD_PN5180_PIN_MISO    13
+#define BOARD_PN5180_PIN_MOSI    11
+#define BOARD_PN5180_PIN_NSS     10
+#define BOARD_PN5180_PIN_BUSY    14
+#define BOARD_PN5180_PIN_RST     15
+#define BOARD_PN5180_PIN_IRQ     16
+#define BOARD_PN5180_SPI_HZ     (7 * 1000 * 1000)
 
 /* RS485 / OSDP */
-#define BOARD_OSDP_UART_NUM      UART_NUM_2
-#define BOARD_OSDP_PIN_TX       17
-#define BOARD_OSDP_PIN_RX       16
-#define BOARD_OSDP_BAUD         9600   /* match your panel; 9600 is typical */
+#define BOARD_OSDP_UART_NUM      UART_NUM_1
+#define BOARD_OSDP_PIN_TX        17
+#define BOARD_OSDP_PIN_RX        18
+#define BOARD_OSDP_BAUD          9600
 
-/* Indicators */
-#define BOARD_PIN_LED_GREEN     25
-#define BOARD_PIN_LED_RED       26
-#define BOARD_PIN_BUZZER        27
-#define BOARD_PIN_BUTTON        32
+/* Indicators — on-board WS2812B RGB LED replaces discrete green/red LEDs */
+#define BOARD_PIN_RGB_LED        48
+#define BOARD_PIN_BUZZER         21
+#define BOARD_PIN_BUTTON          0   /* BOOT button, active-low */
 
 /* OSDP identity */
-#define BOARD_OSDP_PD_ADDRESS    0x65   /* default PD address; change per panel cfg */
+#define BOARD_OSDP_PD_ADDRESS    0x65

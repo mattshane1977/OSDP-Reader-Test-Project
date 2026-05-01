@@ -9,12 +9,12 @@ See [SCHEMATIC.md](SCHEMATIC.md) for the full system diagram and pinout.
 
 | Function     | Component                | Notes |
 |--------------|--------------------------|-------|
-| MCU          | ESP-WROOM-32             | Dual core; OSDP on core 0, NFC on core 1 |
-| RFID         | PN532 (SPI) or PN5180    | Selected at build time via Kconfig |
+| MCU          | ESP32-S3-WROOM-1 N16R8   | Dual core; OSDP on core 0, NFC on core 1 |
+| RFID         | PN5180 (SPI) or PN532    | Selected at build time via Kconfig |
 | RS485        | HiLetgo TTL→485 auto     | 3.3V logic safe; A/B to OSDP bus |
-| Indicators   | Green + red LEDs         | GPIO 25 / 26 active-high |
-| Buzzer       | Active piezo             | GPIO 27 on/off |
-| Mode button  | Momentary to GND         | GPIO 32 with internal pull-up |
+| Indicators   | On-board WS2812B RGB LED | GPIO 48 — no external hardware needed |
+| Buzzer       | Active piezo             | GPIO 21 on/off |
+| Mode button  | BOOT button to GND       | GPIO 0 with internal pull-up |
 
 Pin maps for both NFC chips live in `components/board/include/board.h`.
 
@@ -28,8 +28,8 @@ idf.py menuconfig
 or set in `sdkconfig.defaults`:
 
 ```
-CONFIG_NFC_DRIVER_PN532=y     # default — works today
-CONFIG_NFC_DRIVER_PN5180=y    # complete with ISO 14443-4
+CONFIG_NFC_DRIVER_PN5180=y    # default — ISO 14443-4, DESFire EV3
+CONFIG_NFC_DRIVER_PN532=y     # alternative
 ```
 
 The desfire and leaf layers call `nfc_*` functions exclusively; swapping the
@@ -44,7 +44,7 @@ chip is a pure component-level change with no edits to higher layers.
 ## Build
 
 ```
-idf.py set-target esp32
+idf.py set-target esp32s3
 idf.py build
 idf.py -p /dev/ttyUSB0 flash monitor
 ```
